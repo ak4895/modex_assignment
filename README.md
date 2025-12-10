@@ -8,9 +8,25 @@ A production-ready, concurrent-safe ticket booking system for shows, bus trips, 
 - **Backend API (Render)**: https://modex-assignment.onrender.com
 - **API Documentation**: https://modex-assignment.onrender.com/api-docs
 
-### Test Data Available:
-- **Users**: user1@test.com, user2@test.com, user3@test.com (any name works)
-- **Shows**: 6 movies with various seat availability
+### 🎮 How to Use the Live App:
+
+**Regular User Access:**
+- Login with **any email** (e.g., `john@example.com`) and any name
+- New users are automatically created on first login
+- Browse 6 available movies with test bookings
+- Book seats for any show
+- View and cancel your bookings in "My Bookings"
+
+**Admin Access:**
+- Login with: **admin@test.com** (any name)
+- Access the Admin panel from navigation
+- Create new shows/movies
+- View all bookings and manage system
+
+### 📊 Pre-loaded Test Data:
+- **6 Movies**: Avengers Endgame, The Dark Knight, Inception, Interstellar, The Matrix, Pulp Fiction
+- **Existing Users**: user1@test.com, user2@test.com, user3@test.com
+- **Sample Bookings**: Multiple bookings across different shows
 
 ## 🎯 Project Overview
 
@@ -20,11 +36,12 @@ This is a comprehensive ticket booking platform that handles high-concurrency sc
 - ✅ **Race Condition Prevention**: SERIALIZABLE transactions with SELECT FOR UPDATE locking
 - ✅ **Real-time Availability**: Live seat updates with polling
 - ✅ **Automatic Expiry**: Pending bookings auto-expire after 2 minutes
-- ✅ **User Authentication**: Simple name/email based auth (demo-ready)
-- ✅ **Admin Dashboard**: Create and manage shows
-- ✅ **Responsive Design**: Mobile-friendly UI
+- ✅ **User Authentication**: Simple name/email based auth - auto-create users on login
+- ✅ **Admin Dashboard**: Restricted to admin@test.com - create and manage shows
+- ✅ **Smooth Animations**: Gradient backgrounds, card transitions, ripple button effects
+- ✅ **Responsive Design**: Mobile-friendly UI with modern gradients
 - ✅ **Full TypeScript**: Type-safe across both frontend and backend
-- ✅ **API Documentation**: Swagger/OpenAPI specs included
+- ✅ **API Documentation**: Interactive Swagger/OpenAPI docs
 
 ## 📁 Project Structure
 
