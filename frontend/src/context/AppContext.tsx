@@ -5,6 +5,7 @@ import apiService from '../services/apiService';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   login: (name: string, email: string) => Promise<void>;
   logout: () => void;
 }
@@ -55,8 +56,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('user');
   }, []);
 
+  const isAdmin = user?.email === 'admin@test.com';
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isAdmin, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

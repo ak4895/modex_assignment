@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../hooks/index';
 
 export const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   return (
     <header style={styles.header}>
@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
             {user && (
               <>
                 <a href="/my-bookings" style={styles.link}>My Bookings</a>
-                <a href="/admin" style={styles.link}>Admin</a>
+                {isAdmin && <a href="/admin" style={styles.link}>Admin</a>}
                 <span style={styles.user}>{user.name}</span>
                 <button onClick={logout} style={styles.logoutBtn}>Logout</button>
               </>

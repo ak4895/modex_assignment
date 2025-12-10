@@ -15,6 +15,40 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isAdmin } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  
+  if (!isAdmin) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <h2>⛔ Access Denied</h2>
+        <p>Only administrators can access this page.</p>
+        <p>Please login with admin@test.com to access the admin panel.</p>
+        <button 
+          onClick={() => window.location.href = '/'} 
+          className="btn-primary"
+          style={{ padding: '12px 24px' }}
+        >
+          Go to Home
+        </button>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
+};
+
 function AppContent() {
   const { isAuthenticated } = useAuth();
 
@@ -50,9 +84,9 @@ function AppContent() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminPage />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" />} />
