@@ -454,3 +454,4 @@ Built as a comprehensive solution for the Modex Assessment with focus on:
 **Last Updated**: December 11, 2024
 
 **Built with ❤️ for learning and excellence**
+# Live: https://modex-assignment-3xcmb01tc-aayush-kumars-projects-10df23e0.vercel.app
