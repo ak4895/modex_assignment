@@ -2,6 +2,16 @@
 
 A production-ready, concurrent-safe ticket booking system for shows, bus trips, and doctor appointments. Built with Node.js/Express backend and React TypeScript frontend.
 
+## 🚀 Live Deployment
+
+- **Frontend (Vercel)**: https://modex-assignment-3xcmb01tc-aayush-kumars-projects-10df23e0.vercel.app
+- **Backend API (Render)**: https://modex-assignment.onrender.com
+- **API Documentation**: https://modex-assignment.onrender.com/api-docs
+
+### Test Data Available:
+- **Users**: user1@test.com, user2@test.com, user3@test.com (any name works)
+- **Shows**: 6 movies with various seat availability
+
 ## 🎯 Project Overview
 
 This is a comprehensive ticket booking platform that handles high-concurrency scenarios, prevents race conditions and overbooking through SERIALIZABLE database transactions with pessimistic locking.
