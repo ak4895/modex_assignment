@@ -1,0 +1,293 @@
+{
+  "info": {
+    "name": "Ticket Booking System API",
+    "description": "API collection for testing the Ticket Booking System",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create/Get User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/users/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shows",
+      "item": [
+        {
+          "name": "Create Show",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Movie XYZ\",\n  \"start_time\": \"2024-12-15T18:30:00Z\",\n  \"total_seats\": 100,\n  \"show_type\": \"movie\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/shows",
+              "host": ["{{BASE_URL}}"],
+              "path": ["shows"]
+            }
+          }
+        },
+        {
+          "name": "Get All Shows",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/shows",
+              "host": ["{{BASE_URL}}"],
+              "path": ["shows"]
+            }
+          }
+        },
+        {
+          "name": "Get Show by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/shows/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["shows", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Available Seats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/shows/1/available-seats",
+              "host": ["{{BASE_URL}}"],
+              "path": ["shows", "1", "available-seats"]
+            }
+          }
+        },
+        {
+          "name": "Get Show Statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/shows/1/stats",
+              "host": ["{{BASE_URL}}"],
+              "path": ["shows", "1", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Book Seats",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"show_id\": 1,\n  \"seats_booked\": 3\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/bookings",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get User Bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/user/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", "user", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Show Bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/show/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", "show", "1"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", "1"]
+            }
+          }
+        },
+        {
+          "name": "Expire Old Bookings",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{BASE_URL}}/bookings/expire-old",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings", "expire-old"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concurrency Test",
+      "item": [
+        {
+          "name": "Create Test Show",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Concurrency Test Show\",\n  \"start_time\": \"2024-12-20T14:00:00Z\",\n  \"total_seats\": 10,\n  \"show_type\": \"test\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/shows",
+              "host": ["{{BASE_URL}}"],
+              "path": ["shows"]
+            }
+          }
+        },
+        {
+          "name": "Create Test User 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User 1\",\n  \"email\": \"user1@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Concurrent Booking 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 1,\n  \"show_id\": 1,\n  \"seats_booked\": 5\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/bookings",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings"]
+            }
+          }
+        },
+        {
+          "name": "Concurrent Booking 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 2,\n  \"show_id\": 1,\n  \"seats_booked\": 7\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/bookings",
+              "host": ["{{BASE_URL}}"],
+              "path": ["bookings"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    }
+  ]
+}
