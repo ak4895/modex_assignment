@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { Show, User, Booking, ApiResponse, BookingRequest, CreateShowRequest } from '../types/index';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://modex-assignment.onrender.com/api';
 
 class ApiService {
   private client: AxiosInstance;
