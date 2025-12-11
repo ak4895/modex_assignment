@@ -264,10 +264,9 @@ const styles = {
   successBox: {
     backgroundColor: 'white',
     borderRadius: '12px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
     padding: '40px',
     textAlign: 'center' as const,
-    border: '1px solid #e0e0e0',
   } as React.CSSProperties,
   successIcon: {
     width: '80px',
@@ -291,8 +290,7 @@ const styles = {
     marginBottom: '30px',
   } as React.CSSProperties,
   detailSection: {
-    backgroundColor: '#ffffff',
-    border: '2px solid #e0e0e0',
+    backgroundColor: '#f9f9f9',
     padding: '20px',
     borderRadius: '8px',
     marginBottom: '20px',
@@ -303,8 +301,6 @@ const styles = {
     marginBottom: '12px',
     paddingBottom: '12px',
     borderBottom: '1px solid #eee',
-    color: '#333',
-    fontWeight: '500',
   } as React.CSSProperties,
   nextSteps: {
     backgroundColor: '#f0f8ff',
