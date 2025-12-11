@@ -1,4 +1,4 @@
-import { getClient } from '../db/index';
+import { getClient, query } from '../db/index';
 import { PoolClient } from 'pg';
 import { Booking, BookingStatus } from '../types/index';
 
@@ -145,16 +145,31 @@ export class BookingService {
    * Get all bookings for a show
    */
   static async getShowBookings(showId: number): Promise<any[]> {
-    const result = await (await getClient()).query(
-      `SELECT b.*, u.name as user_name, u.email as user_email
+    // Optimized query: only fetch CONFIRMED bookings with their seats
+    // This is what the frontend needs for seat availability
+    const result = await query(
+      `SELECT b.id, b.user_id, b.show_id, b.seats_booked, b.status, b.created_at
        FROM bookings b
-       JOIN users u ON b.user_id = u.id
-       WHERE b.show_id = $1
+       WHERE b.show_id = $1 AND b.status = 'CONFIRMED'
        ORDER BY b.created_at DESC`,
       [showId]
     );
 
-    return result.rows;
+    // Fetch seats for each booking in parallel for efficiency
+    const bookingsWithSeats = await Promise.all(
+      result.rows.map(async (booking) => {
+        const seatsResult = await query(
+          `SELECT seat_number FROM booking_seats WHERE booking_id = $1`,
+          [booking.id]
+        );
+        return {
+          ...booking,
+          seats: seatsResult.rows.map(r => r.seat_number)
+        };
+      })
+    );
+
+    return bookingsWithSeats;
   }
 
   /**
