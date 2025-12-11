@@ -94,6 +94,17 @@ export class ShowController {
         data: show,
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Get show by ID error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(404).json({
         success: false,
         error: error.message || 'Show not found',
@@ -115,6 +126,17 @@ export class ShowController {
         data: shows,
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Get shows by type error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(500).json({
         success: false,
         error: error.message,
@@ -182,6 +204,17 @@ export class ShowController {
         data: stats,
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Get show stats error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(400).json({
         success: false,
         error: error.message,

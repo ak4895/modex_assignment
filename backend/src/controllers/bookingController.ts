@@ -37,6 +37,17 @@ export class BookingController {
         message: 'Booking confirmed successfully',
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Booking error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(400).json({
         success: false,
         error: error.message || 'Failed to book seats',
@@ -79,6 +90,17 @@ export class BookingController {
         data: bookings,
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Get user bookings error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(400).json({
         success: false,
         error: error.message,
@@ -100,6 +122,17 @@ export class BookingController {
         data: bookings,
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Get show bookings error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(400).json({
         success: false,
         error: error.message,
@@ -143,6 +176,17 @@ export class BookingController {
         data: { available_seats: seats, count: seats.length },
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Get available seats error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(400).json({
         success: false,
         error: error.message,
