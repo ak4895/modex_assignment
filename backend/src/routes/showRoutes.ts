@@ -17,16 +17,27 @@ router.get('/', ShowController.getAllShows);
 
 /**
  * GET /api/shows/type/:type - Get shows by type
+ * MUST be before /:id to avoid matching as :id
  */
 router.get('/type/:type', ShowController.getShowsByType);
 
 /**
  * GET /api/shows/:id/stats - Get show statistics
+ * MUST be before generic /:id
  */
 router.get('/:id/stats', ShowController.getShowStats);
 
 /**
+ * GET /api/shows/:id/bookings - Get all bookings for a show
+ * MUST be before generic /:id
+ */
+router.get('/:showId/bookings', (req: Request, res: Response) => {
+  return BookingController.getShowBookings(req, res);
+});
+
+/**
  * GET /api/shows/:id/available-seats - Get available seats
+ * MUST be before generic /:id
  */
 router.get('/:showId/available-seats', (req: Request, res: Response) => {
   return BookingController.getAvailableSeats(req, res);
