@@ -145,4 +145,4 @@ export const getClient = async (): Promise<PoolClient> => {
   return primaryPool.connect();
 };
 
-export default pool;
+export default getConnection();
