@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "migrate": "ts-node src/db/migrate.ts",
     "seed": "ts-node src/db/seed.ts",
+    "seed:supabase": "ts-node src/db/seed-supabase.ts",
     "test": "jest --forceExit",
     "test:concurrency": "jest --testPathPattern=concurrency --forceExit"
   },
