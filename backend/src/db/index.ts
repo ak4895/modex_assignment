@@ -7,6 +7,10 @@ dotenv.config();
 const internalUrl = process.env.DATABASE_INTERNAL_URL;
 const externalUrl = process.env.DATABASE_EXTERNAL_URL || process.env.DATABASE_URL;
 
+console.log('Database URLs configured:');
+console.log('- Internal:', internalUrl ? `${internalUrl.split('@')[1]?.split('/')[0] || 'SET'}` : 'NOT SET');
+console.log('- External:', externalUrl ? `${externalUrl.split('@')[1]?.split('/')[0] || 'SET'}` : 'NOT SET');
+
 if (!internalUrl && !externalUrl) {
   console.error('ERROR: No database URLs configured');
   console.error('Please set DATABASE_INTERNAL_URL or DATABASE_EXTERNAL_URL or DATABASE_URL');
@@ -75,12 +79,12 @@ const testConnection = async () => {
     }
   } catch (err: any) {
     console.error(`❌ PRIMARY (${activeDatabaseUrl}) connection failed:`, err.message);
-    if (fallbackPool && primaryPool !== fallbackPool && activeDatabaseUrl === 'INTERNAL') {
-      console.log('⚠️ Switching to fallback (External) connection');
-      primaryPool = fallbackPool;
-      activeDatabaseUrl = 'EXTERNAL (fallback)';
+    
+    // Try fallback if available
+    if (fallbackPool && primaryPool !== fallbackPool) {
+      console.log('⚠️ Trying fallback connection...');
       try {
-        await primaryPool.query('SELECT NOW()');
+        await fallbackPool.query('SELECT NOW()');
         console.log('✓ FALLBACK connection successful');
       } catch (fallbackErr: any) {
         console.error('❌ FALLBACK connection also failed:', fallbackErr.message);
@@ -89,8 +93,12 @@ const testConnection = async () => {
   }
 };
 
-// Run connection test asynchronously
-testConnection().catch(console.error);
+// Run connection test asynchronously (non-blocking)
+setTimeout(() => {
+  testConnection().catch(err => {
+    console.error('Connection test error:', err.message);
+  });
+}, 1000); // Delay by 1 second to allow server to start
 
 export const getConnection = (): Pool => {
   if (!primaryPool) {
