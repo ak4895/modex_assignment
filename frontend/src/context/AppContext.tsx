@@ -40,12 +40,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = useCallback(async (name: string, email: string) => {
     try {
+      console.log('Attempting login with:', { name, email });
       const response = await apiService.createOrGetUser(name, email);
+      console.log('Login response:', response);
+      
       if (response.success && response.data) {
+        console.log('Login successful, setting user:', response.data);
         setUser(response.data);
         localStorage.setItem('user', JSON.stringify(response.data));
+      } else {
+        throw new Error(response.error || 'Login failed - no user data received');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
       throw error;
     }
@@ -75,11 +81,16 @@ export const ShowProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
     try {
       const response = await apiService.getAllShows();
+      console.log('Fetch shows response:', response);
+      
       if (response.success && response.data) {
         setShows(response.data);
+      } else {
+        throw new Error(response.error || 'Failed to fetch shows');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch shows');
+      const errorMsg = err.message || 'Failed to fetch shows';
+      setError(errorMsg);
       console.error('Fetch shows error:', err);
     } finally {
       setLoading(false);
@@ -89,9 +100,14 @@ export const ShowProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const fetchShowById = useCallback(async (id: number): Promise<Show | null> => {
     try {
       const response = await apiService.getShowById(id);
+      console.log('Fetch show by ID response:', response);
+      
       if (response.success && response.data) {
         return response.data;
       }
+      
+      const errorMsg = response.error || 'Failed to fetch show';
+      console.error('Fetch show error:', errorMsg);
       return null;
     } catch (err) {
       console.error('Fetch show by ID error:', err);

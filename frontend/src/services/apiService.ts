@@ -16,9 +16,20 @@ class ApiService {
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
-      (response) => response.data,
+      (response) => {
+        // Return the full response structure (with data, success, etc.)
+        return response.data;
+      },
       (error) => {
-        console.error('API Error:', error);
+        // Log the error for debugging
+        console.error('API Error:', error?.response?.data || error?.message);
+        
+        // If we have a response with data, use it (includes error messages from backend)
+        if (error?.response?.data) {
+          throw new Error(error.response.data.error || error.message || 'API request failed');
+        }
+        
+        // Otherwise throw the original error
         throw error;
       }
     );
