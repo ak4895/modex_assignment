@@ -9,6 +9,7 @@ import swaggerUi from 'swagger-ui-express';
 import bookingRoutes from './routes/bookingRoutes';
 import showRoutes from './routes/showRoutes';
 import userRoutes from './routes/userRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 // Import database
 import { getConnection } from './db/index';
@@ -83,6 +84,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/shows', showRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

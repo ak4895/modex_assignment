@@ -3,9 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, ShowProvider, BookingProvider } from './context/AppContext';
 import { useAuth } from './hooks/index';
 import { Header } from './components/Header';
+import { ToastContainer } from './components/Toast';
 import { LoginPage } from './pages/LoginPage';
 import { HomePage } from './pages/HomePage';
 import { BookingPage } from './pages/BookingPage';
+import { SeatSelectionPage } from './pages/SeatSelectionPage';
+import { PaymentPage } from './pages/PaymentPage';
+import { BookingSuccessPage } from './pages/BookingSuccessPage';
 import { AdminPage } from './pages/AdminPage';
 import { MyBookingsPage } from './pages/MyBookings';
 import './styles/global.css';
@@ -66,6 +70,30 @@ function AppContent() {
           }
         />
         <Route
+          path="/booking/:showId"
+          element={
+            <ProtectedRoute>
+              <SeatSelectionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment"
+          element={
+            <ProtectedRoute>
+              <PaymentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking-success/:bookingId"
+          element={
+            <ProtectedRoute>
+              <BookingSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/booking/:id"
           element={
             <ProtectedRoute>
@@ -101,6 +129,7 @@ function App() {
       <AuthProvider>
         <ShowProvider>
           <BookingProvider>
+            <ToastContainer />
             <AppContent />
           </BookingProvider>
         </ShowProvider>

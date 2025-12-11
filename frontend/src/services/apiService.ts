@@ -101,6 +101,46 @@ class ApiService {
   async expireOldBookings(): Promise<ApiResponse<any>> {
     return this.client.post('/bookings/expire-old');
   }
+
+  // ========== Admin Endpoints ==========
+
+  async getShowSeats(showId: number): Promise<ApiResponse<any>> {
+    return this.client.get(`/admin/shows/${showId}/seats`);
+  }
+
+  async getShowOccupancy(showId: number): Promise<ApiResponse<any>> {
+    return this.client.get(`/admin/shows/${showId}/occupancy`);
+  }
+
+  async forceCancelBooking(bookingId: number, reason: string): Promise<ApiResponse<any>> {
+    return this.client.post(`/admin/bookings/${bookingId}/force-cancel`, { reason });
+  }
+
+  async releaseSeats(showId: number, seatNumbers: number[], reason: string): Promise<ApiResponse<any>> {
+    return this.client.post('/admin/seats/release', { showId, seatNumbers, reason });
+  }
+
+  async blockSeats(showId: number, seatNumbers: number[]): Promise<ApiResponse<any>> {
+    return this.client.post('/admin/seats/block', { showId, seatNumbers });
+  }
+
+  // ========== Generic HTTP Methods ==========
+
+  async get(url: string): Promise<any> {
+    return this.client.get(url);
+  }
+
+  async post(url: string, data: any): Promise<any> {
+    return this.client.post(url, data);
+  }
+
+  async put(url: string, data: any): Promise<any> {
+    return this.client.put(url, data);
+  }
+
+  async delete(url: string): Promise<any> {
+    return this.client.delete(url);
+  }
 }
 
 export default new ApiService();

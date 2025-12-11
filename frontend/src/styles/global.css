@@ -271,11 +271,127 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
+/* Seat Animations */
+@keyframes seatPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes seatBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes colorShift {
+  0% {
+    background-color: #28a745;
+  }
+  50% {
+    background-color: #ffc107;
+  }
+  100% {
+    background-color: #28a745;
+  }
+}
+
+/* Seat Hover */
+button[style*="backgroundColor: rgb(40, 167, 69)"] {
+  animation: none;
+}
+
+button[style*="backgroundColor: rgb(40, 167, 69)"]:hover {
+  animation: seatBounce 0.4s ease-in-out;
+}
+
+/* Payment Form Animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: scale(1.01);
+}
+
+/* Radio Button Animation */
+input[type="radio"] {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Card Animations */
 .card-header {
   border-bottom: 1px solid #eee;
   margin-bottom: 15px;
   padding-bottom: 15px;
   animation: fadeIn 0.6s ease-out;
+}
+
+/* Payment Method Selection */
+label[style*="border"] {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+label[style*="border"]:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Success Page Animations */
+@keyframes successCheck {
+  0% {
+    transform: scale(0) rotate(-45deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.success-icon {
+  animation: successCheck 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Responsive */
@@ -291,4 +407,60 @@ input:focus, textarea:focus, select:focus {
     padding: 8px 16px;
     font-size: 0.9rem;
   }
+  
+  /* Stack payment grid on mobile */
+  div[style*="gridTemplateColumns: 'repeat(2, 1fr)'"] {
+    grid-template-columns: 1fr !important;
+  }
 }
+
+@media (max-width: 1024px) {
+  /* Stack seat section and sidebar */
+  div[style*="gridTemplateColumns: '1fr 350px'"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  div[style*="gridTemplateColumns: '350px 1fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Real-time animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+.slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+

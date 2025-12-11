@@ -2,14 +2,59 @@ import React, { useState, useEffect } from 'react';
 import { useShows } from '../hooks/index';
 import { Show } from '../types/index';
 
+// Helper function to get availability status
+const getAvailabilityStatus = (show: Show) => {
+  const availabilityPercent = (show.available_seats / show.total_seats) * 100;
+  if (availabilityPercent > 75) return { status: 'AVAILABLE', color: '#28a745' };
+  if (availabilityPercent > 25) return { status: 'FILLING_UP', color: '#ffc107' };
+  return { status: 'ALMOST_FULL', color: '#dc3545' };
+};
+
+// Helper function to generate multiple show times
+const generateShowTimes = (baseTime: Date): Date[] => {
+  const times: Date[] = [];
+  const base = new Date(baseTime);
+  const hours = [11, 14, 17, 20, 23];
+  
+  for (const hour of hours) {
+    const time = new Date(base);
+    time.setHours(hour, 0, 0, 0);
+    if (time > new Date()) times.push(time);
+  }
+  return times.length > 0 ? times : [base];
+};
+
 export const HomePage: React.FC = () => {
   const { shows, loading, error, fetchShows } = useShows();
   const [filteredShows, setFilteredShows] = useState<Show[]>([]);
   const [filter, setFilter] = useState('');
+  const [showTimes, setShowTimes] = useState<Record<number, Date[]>>({});
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
+  // Initial fetch
   useEffect(() => {
     fetchShows();
   }, []);
+
+  // Auto-refresh every 10 seconds for real-time availability updates
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      fetchShows();
+      setLastRefresh(new Date());
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, [fetchShows]);
+
+  useEffect(() => {
+    if (shows.length > 0) {
+      const times: Record<number, Date[]> = {};
+      shows.forEach(show => {
+        times[show.id] = generateShowTimes(new Date(show.start_time));
+      });
+      setShowTimes(times);
+    }
+  }, [shows]);
 
   useEffect(() => {
     if (filter) {
@@ -26,8 +71,9 @@ export const HomePage: React.FC = () => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1>Available Shows</h1>
-        <p style={styles.subtitle}>Browse and book your tickets</p>
+        <h1>🎬 Available Shows</h1>
+        <p style={styles.subtitle}>Browse and book your favorite tickets</p>
+        <p style={styles.refreshIndicator}>🔄 Live updates • Last refresh: {lastRefresh.toLocaleTimeString()}</p>
       </div>
 
       <div style={styles.searchBox}>
@@ -55,37 +101,83 @@ export const HomePage: React.FC = () => {
         </div>
       ) : (
         <div style={styles.grid}>
-          {filteredShows.map((show) => (
-            <div key={show.id} style={styles.card}>
-              <div style={styles.cardHeader}>
-                <h3>{show.name}</h3>
-                <span style={styles.badge}>{show.show_type}</span>
-              </div>
-              <div style={styles.cardBody}>
-                <p>
-                  <strong>Start Time:</strong>{' '}
-                  {new Date(show.start_time).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Available Seats:</strong> {show.available_seats} /{' '}
-                  {show.total_seats}
-                </p>
-                <div style={styles.seatBar}>
-                  <div
+          {filteredShows.map((show) => {
+            const { status, color } = getAvailabilityStatus(show);
+            const times = showTimes[show.id] || [];
+            
+            return (
+              <div 
+                key={show.id} 
+                style={{
+                  ...styles.card,
+                  borderLeft: `5px solid ${color}`,
+                }}
+              >
+                <div style={{...styles.cardHeader, backgroundColor: color + '15'}}>
+                  <div>
+                    <h3 style={{margin: '0 0 5px 0'}}>{show.name}</h3>
+                    <span style={{...styles.statusBadge, backgroundColor: color}}>
+                      {status}
+                    </span>
+                  </div>
+                  <span style={styles.typeBadge}>{show.show_type}</span>
+                </div>
+
+                <div style={styles.cardBody}>
+                  {/* Availability Bar */}
+                  <div style={styles.availabilitySection}>
+                    <p style={styles.sectionLabel}>
+                      <strong>Availability</strong>
+                    </p>
+                    <div style={styles.seatBar}>
+                      <div
+                        style={{
+                          ...styles.seatBarFilled,
+                          width: `${(show.available_seats / show.total_seats) * 100}%`,
+                          backgroundColor: color,
+                        }}
+                      ></div>
+                    </div>
+                    <p style={{fontSize: '0.9rem', color: '#666', marginTop: '8px'}}>
+                      <strong>{show.available_seats}</strong> / {show.total_seats} seats available
+                    </p>
+                  </div>
+
+                  {/* Show Times */}
+                  <div style={styles.showTimesSection}>
+                    <p style={styles.sectionLabel}><strong>Show Times</strong></p>
+                    <div style={styles.timesGrid}>
+                      {times.slice(0, 4).map((time, idx) => (
+                        <a
+                          key={idx}
+                          href={`/booking/${show.id}?time=${time.getTime()}`}
+                          style={{
+                            ...styles.timeButton,
+                            borderColor: color,
+                            color: color,
+                          }}
+                        >
+                          {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={styles.cardFooter}>
+                  <a 
+                    href={`/booking/${show.id}`} 
                     style={{
-                      ...styles.seatBarFilled,
-                      width: `${(show.available_seats / show.total_seats) * 100}%`,
+                      ...styles.bookButton,
+                      backgroundColor: color,
                     }}
-                  ></div>
+                  >
+                    Book Now
+                  </a>
                 </div>
               </div>
-              <div style={styles.cardFooter}>
-                <a href={`/booking/${show.id}`} style={styles.bookButton}>
-                  Book Now
-                </a>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -106,6 +198,13 @@ const styles = {
     color: '#666',
     fontSize: '1.1rem',
   } as React.CSSProperties,
+  refreshIndicator: {
+    color: '#28a745',
+    fontSize: '0.9rem',
+    marginTop: '10px',
+    fontWeight: '500',
+    animation: 'pulse 2s infinite',
+  } as React.CSSProperties,
   searchBox: {
     marginBottom: '30px',
     display: 'flex',
@@ -118,32 +217,41 @@ const styles = {
     fontSize: '1rem',
     border: '2px solid #ddd',
     borderRadius: '8px',
+    transition: 'border-color 0.3s ease',
   } as React.CSSProperties,
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '25px',
   } as React.CSSProperties,
   card: {
     backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
     overflow: 'hidden',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
     cursor: 'pointer',
   } as React.CSSProperties,
   cardHeader: {
-    backgroundColor: '#f8f9fa',
-    padding: '15px',
+    padding: '20px',
     borderBottom: '1px solid #eee',
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   } as React.CSSProperties,
-  badge: {
-    backgroundColor: '#007bff',
+  statusBadge: {
     color: 'white',
-    padding: '4px 12px',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    display: 'inline-block',
+    marginTop: '8px',
+  } as React.CSSProperties,
+  typeBadge: {
+    backgroundColor: '#e3f2fd',
+    color: '#1976d2',
+    padding: '6px 12px',
     borderRadius: '20px',
     fontSize: '0.8rem',
     fontWeight: 'bold',
@@ -151,32 +259,58 @@ const styles = {
   cardBody: {
     padding: '20px',
   } as React.CSSProperties,
+  availabilitySection: {
+    marginBottom: '20px',
+  } as React.CSSProperties,
+  showTimesSection: {
+    marginBottom: '10px',
+  } as React.CSSProperties,
+  sectionLabel: {
+    marginBottom: '10px',
+    fontSize: '0.95rem',
+    color: '#333',
+  } as React.CSSProperties,
   seatBar: {
-    height: '8px',
+    height: '12px',
     backgroundColor: '#e9ecef',
-    borderRadius: '4px',
+    borderRadius: '6px',
     overflow: 'hidden',
-    marginTop: '10px',
+    marginBottom: '8px',
+    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)',
   } as React.CSSProperties,
   seatBarFilled: {
     height: '100%',
-    backgroundColor: '#28a745',
     transition: 'width 0.5s ease',
   } as React.CSSProperties,
+  timesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '8px',
+  } as React.CSSProperties,
+  timeButton: {
+    padding: '10px 8px',
+    textAlign: 'center' as const,
+    borderRadius: '6px',
+    textDecoration: 'none',
+    border: '2px solid',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    backgroundColor: 'white',
+  } as React.CSSProperties,
   cardFooter: {
-    padding: '15px',
+    padding: '15px 20px',
     borderTop: '1px solid #eee',
   } as React.CSSProperties,
   bookButton: {
     display: 'block',
-    backgroundColor: '#007bff',
     color: 'white',
     padding: '12px',
     textAlign: 'center',
-    borderRadius: '4px',
+    borderRadius: '6px',
     textDecoration: 'none',
     fontWeight: 'bold',
-    transition: 'background-color 0.3s ease',
+    transition: 'all 0.3s ease',
   } as React.CSSProperties,
   error: {
     backgroundColor: '#f8d7da',
@@ -196,7 +330,7 @@ const styles = {
     width: '50px',
     height: '50px',
     border: '4px solid #f3f3f3',
-    borderTop: '4px solid #007bff',
+    borderTop: '4px solid #667eea',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   } as React.CSSProperties,

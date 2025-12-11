@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useBooking } from '../hooks/index';
+import { useAuth } from '../hooks/index';
 import { Booking } from '../types/index';
+import apiService from '../services/apiService';
+import { showToast } from '../components/Toast';
+
+interface BookingWithShow extends Booking {
+  show_name?: string;
+  show_time?: string;
+  seats?: number[];
+  qr_code?: string;
+}
 
 export const MyBookingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { bookings, cancelBooking } = useBooking();
   
-  const [userBookings, setUserBookings] = useState<Booking[]>([]);
+  const [userBookings, setUserBookings] = useState<BookingWithShow[]>([]);
   const [loading, setLoading] = useState(true);
   const [canceling, setCanceling] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [expandedBooking, setExpandedBooking] = useState<number | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -21,18 +30,63 @@ export const MyBookingsPage: React.FC = () => {
     }
   }, [user, navigate]);
 
-  // Filter bookings for current user
+  // Fetch user bookings with show details on mount
   useEffect(() => {
     if (user) {
-      const filtered = bookings.filter(b => b.user_id === user.id);
-      setUserBookings(filtered);
+      fetchUserBookings();
+    }
+  }, [user]);
+
+  // Auto-refresh bookings every 3 seconds for real-time status updates
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshInterval = setInterval(() => {
+      fetchUserBookings();
+    }, 3000); // 3 seconds for real-time cancellations and status changes
+
+    return () => clearInterval(refreshInterval);
+  }, [user]);
+
+  const fetchUserBookings = async () => {
+    try {
+      const response = await apiService.get(`/users/${user?.id}/bookings`);
+      const bookingsData = response.data || [];
+      
+      // Fetch show details for each booking
+      const bookingsWithDetails = await Promise.all(
+        bookingsData.map(async (booking: Booking) => {
+          try {
+            const showResponse = await apiService.get(`/shows/${booking.show_id}`);
+            const detailedResponse = await apiService.get(`/bookings/${booking.id}`);
+            return {
+              ...booking,
+              show_name: showResponse.data.name,
+              show_time: showResponse.data.start_time,
+              seats: detailedResponse.data.seats || [],
+              qr_code: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BOOKING_${booking.id}_SHOW_${booking.show_id}`,
+            };
+          } catch (err) {
+            return booking;
+          }
+        })
+      );
+
+      setUserBookings(bookingsWithDetails);
+    } catch (err: any) {
+      setError('Failed to load bookings');
+      console.error('Error fetching bookings:', err);
+    } finally {
       setLoading(false);
     }
-  }, [bookings, user]);
+  };
 
   // Handle booking cancellation
   const handleCancelBooking = async (bookingId: number) => {
-    if (!confirm('Are you sure you want to cancel this booking? Seats will be refunded.')) {
+    const refundAmount = userBookings.find(b => b.id === bookingId)?.seats_booked || 0;
+    const refund = refundAmount * 349;
+    
+    if (!confirm(`Are you sure you want to cancel this booking?\n\nRefund Amount: ₹${refund}`)) {
       return;
     }
 
@@ -40,16 +94,20 @@ export const MyBookingsPage: React.FC = () => {
     setError(null);
 
     try {
-      await cancelBooking(bookingId);
-      setSuccess('Booking cancelled successfully');
+      await apiService.delete(`/bookings/${bookingId}`);
+      showToast(`✓ Booking cancelled! Refund of ₹${refund} will be processed within 5-7 business days.`, 'success');
       
-      // Remove from list
-      setUserBookings(prev => prev.filter(b => b.id !== bookingId));
+      // Update booking status to cancelled
+      setUserBookings(prev => prev.map(b => 
+        b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
+      ));
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
     } catch (err: any) {
-      setError(err.message || 'Failed to cancel booking');
+      const errorMsg = err.response?.data?.error || 'Failed to cancel booking';
+      setError(errorMsg);
+      showToast(`❌ ${errorMsg}`, 'error');
       console.error('Cancellation error:', err);
     } finally {
       setCanceling(null);
@@ -68,11 +126,16 @@ export const MyBookingsPage: React.FC = () => {
 
   const confirmedCount = userBookings.filter(b => b.status === 'CONFIRMED').length;
   const pendingCount = userBookings.filter(b => b.status === 'PENDING').length;
+  const cancelledCount = userBookings.filter(b => b.status === 'CANCELLED').length;
+
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>My Bookings</h1>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+          <h1 style={styles.title}>📋 My Bookings</h1>
+          <span style={styles.liveIndicator}>🔴 Live • Updates every 3s</span>
+        </div>
         <button 
           style={styles.backButton}
           onClick={() => navigate('/')}
@@ -83,17 +146,21 @@ export const MyBookingsPage: React.FC = () => {
 
       {/* Stats */}
       <div style={styles.statsContainer}>
-        <div style={styles.statCard}>
+        <div style={{...styles.statCard, borderLeft: '4px solid #4CAF50'}}>
           <div style={styles.statNumber}>{confirmedCount}</div>
           <div style={styles.statLabel}>Confirmed</div>
         </div>
-        <div style={styles.statCard}>
+        <div style={{...styles.statCard, borderLeft: '4px solid #ff9800'}}>
           <div style={styles.statNumber}>{pendingCount}</div>
           <div style={styles.statLabel}>Pending</div>
         </div>
-        <div style={styles.statCard}>
+        <div style={{...styles.statCard, borderLeft: '4px solid #dc3545'}}>
+          <div style={styles.statNumber}>{cancelledCount}</div>
+          <div style={styles.statLabel}>Cancelled</div>
+        </div>
+        <div style={{...styles.statCard, borderLeft: '4px solid #667eea'}}>
           <div style={styles.statNumber}>{userBookings.length}</div>
-          <div style={styles.statLabel}>Total Bookings</div>
+          <div style={styles.statLabel}>Total</div>
         </div>
       </div>
 
@@ -114,7 +181,7 @@ export const MyBookingsPage: React.FC = () => {
       {/* Bookings List */}
       {userBookings.length === 0 ? (
         <div style={styles.emptyState}>
-          <div style={styles.emptyIcon}>📋</div>
+          <div style={styles.emptyIcon}>🎬</div>
           <h2>No bookings yet</h2>
           <p>You haven't made any bookings. Browse shows and book tickets to get started!</p>
           <button 
@@ -132,63 +199,89 @@ export const MyBookingsPage: React.FC = () => {
               <div 
                 style={{
                   ...styles.statusBadge,
-                  backgroundColor: booking.status === 'CONFIRMED' ? '#4CAF50' : '#ff9800',
+                  backgroundColor: 
+                    booking.status === 'CONFIRMED' ? '#4CAF50' : 
+                    booking.status === 'CANCELLED' ? '#dc3545' :
+                    '#ff9800',
                   color: 'white'
                 }}
               >
-                {booking.status === 'CONFIRMED' && '✓'} {booking.status}
+                {booking.status === 'CONFIRMED' && '✓ CONFIRMED'}
+                {booking.status === 'PENDING' && '⏱️ PENDING'}
+                {booking.status === 'CANCELLED' && '✗ CANCELLED'}
               </div>
 
               {/* Booking Details */}
               <div style={styles.bookingContent}>
                 <div style={styles.bookingHeader}>
-                  <h3 style={{ margin: 0, fontSize: '18px' }}>Booking #{booking.id}</h3>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem' }}>
+                    🎟️ {booking.show_name || `Booking #${booking.id}`}
+                  </h3>
                   <span style={styles.bookingDate}>
-                    {new Date(booking.created_at).toLocaleDateString()}
+                    {booking.show_time ? new Date(booking.show_time).toLocaleDateString() : 'N/A'}
                   </span>
                 </div>
 
                 <div style={styles.bookingGrid}>
                   <div style={styles.bookingField}>
-                    <span style={styles.label}>Seats Booked</span>
-                    <span style={styles.value}>{booking.seats_booked}</span>
+                    <span style={styles.label}>Booking ID</span>
+                    <span style={styles.value}>#{booking.id}</span>
                   </div>
                   <div style={styles.bookingField}>
-                    <span style={styles.label}>Show ID</span>
-                    <span style={styles.value}>{booking.show_id}</span>
+                    <span style={styles.label}>Seats</span>
+                    <span style={styles.value}>{booking.seats?.length || booking.seats_booked}</span>
                   </div>
                   <div style={styles.bookingField}>
-                    <span style={styles.label}>Total Price</span>
-                    <span style={styles.value}>₹{booking.seats_booked * 150}</span>
-                  </div>
-                  <div style={styles.bookingField}>
-                    <span style={styles.label}>Status</span>
-                    <span style={{
-                      ...styles.value,
-                      color: booking.status === 'CONFIRMED' ? '#4CAF50' : '#ff9800',
-                      fontWeight: 'bold'
-                    }}>
-                      {booking.status}
+                    <span style={styles.label}>Show Time</span>
+                    <span style={styles.value}>
+                      {booking.show_time ? new Date(booking.show_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                     </span>
+                  </div>
+                  <div style={styles.bookingField}>
+                    <span style={styles.label}>Amount</span>
+                    <span style={{...styles.value, color: '#28a745', fontWeight: 'bold'}}>₹{booking.seats_booked * 349}</span>
                   </div>
                 </div>
 
-                {/* Status-specific Info */}
-                {booking.status === 'PENDING' && (
-                  <div style={styles.warningBox}>
-                    <strong>⏱️ Note:</strong> This booking is pending and will expire in 2 minutes if not confirmed.
+                {booking.seats && booking.seats.length > 0 && (
+                  <div style={styles.seatsList}>
+                    <strong>Seats:</strong> {booking.seats.join(', ')}
                   </div>
                 )}
 
+                {/* Expandable Ticket Section */}
                 {booking.status === 'CONFIRMED' && (
-                  <div style={styles.successBox}>
-                    <strong>✓ Confirmed</strong> - Your booking is confirmed. Show your booking ID at the venue.
+                  <div>
+                    <button
+                      onClick={() => setExpandedBooking(expandedBooking === booking.id ? null : booking.id)}
+                      style={styles.expandButton}
+                    >
+                      {expandedBooking === booking.id ? '▼ Hide Ticket' : '▶ View Ticket'}
+                    </button>
+
+                    {expandedBooking === booking.id && booking.qr_code && (
+                      <div style={styles.ticketPreview}>
+                        <div style={styles.ticketInfo}>
+                          <p><strong>Booking ID:</strong> #{booking.id}</p>
+                          <p><strong>Movie:</strong> {booking.show_name}</p>
+                          <p><strong>Date:</strong> {booking.show_time ? new Date(booking.show_time).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                        <img src={booking.qr_code} alt="QR Code" style={styles.qrCodeSmall} />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Status Messages */}
+                {booking.status === 'PENDING' && (
+                  <div style={styles.warningBox}>
+                    ⏱️ <strong>Pending:</strong> This booking will expire in 2 minutes if not confirmed.
                   </div>
                 )}
 
                 {booking.status === 'CANCELLED' && (
                   <div style={styles.cancelledBox}>
-                    <strong>✗ Cancelled</strong> - Seats have been refunded.
+                    ✗ <strong>Cancelled:</strong> Refund of ₹{booking.seats_booked * 349} will be processed within 5-7 business days.
                   </div>
                 )}
               </div>
@@ -262,6 +355,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     margin: 0,
     fontSize: '32px',
     color: '#333'
+  },
+  liveIndicator: {
+    fontSize: '14px',
+    color: '#dc3545',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+    animation: 'pulse 1.5s infinite'
   },
   backButton: {
     padding: '10px 16px',
@@ -463,5 +565,44 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #81c784',
     borderRadius: '8px',
     padding: '20px'
+  },
+  expandButton: {
+    marginTop: '12px',
+    padding: '8px 16px',
+    backgroundColor: '#667eea',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    fontWeight: 'bold',
+    transition: 'all 0.3s ease',
+  },
+  ticketPreview: {
+    marginTop: '15px',
+    padding: '15px',
+    backgroundColor: '#f9f9f9',
+    border: '2px solid #667eea',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '15px',
+  },
+  ticketInfo: {
+    flex: 1,
+  },
+  qrCodeSmall: {
+    width: '120px',
+    height: '120px',
+    border: '2px solid #667eea',
+    borderRadius: '6px',
+    padding: '3px',
+  },
+  seatsList: {
+    marginTop: '10px',
+    padding: '10px',
+    backgroundColor: '#f0f0f0',
+    borderRadius: '6px',
+    fontSize: '0.9rem',
   }
 };
