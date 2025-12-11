@@ -91,6 +91,26 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Database health check endpoint
+app.get('/db-health', async (req: Request, res: Response) => {
+  try {
+    const pool = getConnection();
+    const result = await pool.query('SELECT NOW() as time');
+    res.json({
+      status: 'OK',
+      database: 'Connected',
+      timestamp: result.rows[0].time,
+    });
+  } catch (error: any) {
+    res.status(503).json({
+      status: 'ERROR',
+      database: 'Disconnected',
+      error: error.message,
+      databaseUrl: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+    });
+  }
+});
+
 // Root endpoint
 app.get('/', (req: Request, res: Response) => {
   res.json({
