@@ -53,41 +53,47 @@ export const SeatSelectionPage: React.FC = () => {
   const fetchShowDetails = async () => {
     try {
       setLoading(true);
-      const response = await apiService.get(`/shows/${showId}`);
-      setShow(response.data);
+      setError('');
       
-      // Fetch actual booked seats from backend bookings
-      const bookingsResponse = await apiService.get(`/shows/${showId}/bookings`);
+      // Fetch show details
+      const showResponse = await apiService.getShowById(parseInt(showId!));
+      if (!showResponse.success) {
+        throw new Error(showResponse.error || 'Failed to fetch show details');
+      }
+      setShow(showResponse.data);
+      
+      // Fetch all bookings for this show
+      const bookingsResponse = await apiService.getShowBookings(parseInt(showId!));
+      if (!bookingsResponse.success) {
+        throw new Error(bookingsResponse.error || 'Failed to fetch bookings');
+      }
+      
       const allBookings = bookingsResponse.data || [];
-      
       const bookedSeatNumbers = new Set<number>();
       
-      // Fetch detailed seat information for each booking
+      // Extract seat numbers from confirmed bookings
       for (const booking of allBookings) {
-        if (booking.status === 'CONFIRMED') {
-          try {
-            const bookingDetails = await apiService.get(`/bookings/${booking.id}`);
-            if (bookingDetails.data.seats) {
-              bookingDetails.data.seats.forEach((seat: number) => {
-                bookedSeatNumbers.add(seat);
-              });
-            }
-          } catch (err) {
-            console.warn(`Failed to fetch details for booking ${booking.id}`);
+        if (booking.status === 'CONFIRMED' && booking.seats) {
+          // If seats is an array of seat objects with seat_number property
+          if (Array.isArray(booking.seats)) {
+            booking.seats.forEach((seat: any) => {
+              const seatNum = typeof seat === 'number' ? seat : seat.seat_number;
+              if (seatNum) bookedSeatNumbers.add(seatNum);
+            });
           }
         }
       }
       
-      // Initialize seats with actual booking data
+      // Initialize seats grid
       const seatArray: Seat[] = [];
       const seatsPerRow = 10;
-      const totalRows = Math.ceil(response.data.total_seats / seatsPerRow);
+      const totalRows = Math.ceil(showResponse.data.total_seats / seatsPerRow);
       
       for (let row = 0; row < totalRows; row++) {
         const rowLetter = String.fromCharCode(65 + row); // A, B, C, etc.
         for (let col = 1; col <= seatsPerRow; col++) {
           const seatNum = row * seatsPerRow + col;
-          if (seatNum <= response.data.total_seats) {
+          if (seatNum <= showResponse.data.total_seats) {
             seatArray.push({
               seatNumber: seatNum,
               rowLetter,
@@ -98,8 +104,10 @@ export const SeatSelectionPage: React.FC = () => {
         }
       }
       setSeats(seatArray);
+      setError('');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load show details');
+      console.error('Error fetching show details:', err);
+      setError(err.message || 'Failed to load seat availability');
     } finally {
       setLoading(false);
     }
