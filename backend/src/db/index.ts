@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool, PoolClient, PoolConfig } from 'pg';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -23,7 +23,7 @@ const createPoolForUrl = (url: string, label: string): Pool => {
 
   console.log(`Creating ${label} pool for: ${url.split('@')[1]?.split(':')[0] || 'database'}`);
 
-  return new Pool({
+  const poolConfig: PoolConfig = {
     connectionString: url,
     ssl: isLocal ? false : { rejectUnauthorized: false },
     max: isInternal ? 20 : 10,
@@ -32,15 +32,9 @@ const createPoolForUrl = (url: string, label: string): Pool => {
     connectionTimeoutMillis: isInternal ? 10000 : 30000,
     statement_timeout: 30000,
     query_timeout: 30000,
-    validate: !isInternal ? (client) => {
-      return new Promise((resolve, reject) => {
-        client.query('SELECT NOW()', (err) => {
-          if (err) reject(err);
-          else resolve(true);
-        });
-      });
-    } : undefined,
-  });
+  };
+
+  return new Pool(poolConfig);
 };
 
 // Initialize pools
@@ -73,18 +67,30 @@ if (fallbackPool) {
 }
 
 // Test primary connection on startup
-primaryPool.query('SELECT NOW()', (err, res) => {
-  if (err) {
+const testConnection = async () => {
+  try {
+    if (primaryPool) {
+      await primaryPool.query('SELECT NOW()');
+      console.log(`✓ PRIMARY (${activeDatabaseUrl}) connection successful`);
+    }
+  } catch (err: any) {
     console.error(`❌ PRIMARY (${activeDatabaseUrl}) connection failed:`, err.message);
-    if (fallbackPool && activeDatabaseUrl === 'INTERNAL') {
+    if (fallbackPool && primaryPool !== fallbackPool && activeDatabaseUrl === 'INTERNAL') {
       console.log('⚠️ Switching to fallback (External) connection');
       primaryPool = fallbackPool;
       activeDatabaseUrl = 'EXTERNAL (fallback)';
+      try {
+        await primaryPool.query('SELECT NOW()');
+        console.log('✓ FALLBACK connection successful');
+      } catch (fallbackErr: any) {
+        console.error('❌ FALLBACK connection also failed:', fallbackErr.message);
+      }
     }
-  } else {
-    console.log(`✓ PRIMARY (${activeDatabaseUrl}) connection successful`);
   }
-});
+};
+
+// Run connection test asynchronously
+testConnection().catch(console.error);
 
 export const getConnection = (): Pool => {
   if (!primaryPool) {
