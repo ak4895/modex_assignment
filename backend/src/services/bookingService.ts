@@ -145,31 +145,30 @@ export class BookingService {
    * Get all bookings for a show
    */
   static async getShowBookings(showId: number): Promise<any[]> {
-    // Optimized query: only fetch CONFIRMED bookings with their seats
-    // This is what the frontend needs for seat availability
+    // Ultra-optimized: Single query to get all confirmed bookings with seats
+    // Uses JSON aggregation to avoid N+1 queries
     const result = await query(
-      `SELECT b.id, b.user_id, b.show_id, b.seats_booked, b.status, b.created_at
+      `SELECT 
+        b.id, 
+        b.user_id, 
+        b.show_id, 
+        b.seats_booked, 
+        b.status, 
+        b.created_at,
+        COALESCE(json_agg(bs.seat_number) FILTER (WHERE bs.seat_number IS NOT NULL), '[]'::json) as seats
        FROM bookings b
+       LEFT JOIN booking_seats bs ON b.id = bs.booking_id
        WHERE b.show_id = $1 AND b.status = 'CONFIRMED'
+       GROUP BY b.id, b.user_id, b.show_id, b.seats_booked, b.status, b.created_at
        ORDER BY b.created_at DESC`,
       [showId]
     );
 
-    // Fetch seats for each booking in parallel for efficiency
-    const bookingsWithSeats = await Promise.all(
-      result.rows.map(async (booking) => {
-        const seatsResult = await query(
-          `SELECT seat_number FROM booking_seats WHERE booking_id = $1`,
-          [booking.id]
-        );
-        return {
-          ...booking,
-          seats: seatsResult.rows.map(r => r.seat_number)
-        };
-      })
-    );
-
-    return bookingsWithSeats;
+    // Convert JSON seats to array of numbers
+    return result.rows.map(row => ({
+      ...row,
+      seats: Array.isArray(row.seats) ? row.seats : []
+    }));
   }
 
   /**
