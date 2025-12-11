@@ -26,7 +26,18 @@ export class UserController {
         data: user,
       } as ApiResponse<any>);
     } catch (error: any) {
-      res.status(400).json({
+      console.error('User creation error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
+      res.status(500).json({
         success: false,
         error: error.message || 'Failed to create user',
       } as ApiResponse<null>);

@@ -3,6 +3,11 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is not set');
+  console.error('Please set DATABASE_URL in your .env file or Render environment variables');
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
@@ -11,8 +16,23 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000,
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
+pool.on('error', (err: any) => {
+  console.error('Database pool error:', err.message);
+  console.error('Error code:', err.code);
+  if (err.code === 'ECONNREFUSED') {
+    console.error('Connection refused - PostgreSQL server may not be running or accessible');
+  } else if (err.code === 'ETIMEDOUT') {
+    console.error('Connection timeout - PostgreSQL server is not responding');
+  }
+});
+
+// Test connection on startup
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Database connection failed on startup:', err.message);
+  } else {
+    console.log('✓ Database connection successful');
+  }
 });
 
 export const getConnection = (): Pool => pool;

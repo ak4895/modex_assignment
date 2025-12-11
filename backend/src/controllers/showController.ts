@@ -62,9 +62,20 @@ export class ShowController {
         data: shows,
       } as ApiResponse<any>);
     } catch (error: any) {
+      console.error('Show fetch error:', error);
+      
+      // Check if it's a database connection error
+      if (error.message && error.message.includes('timeout')) {
+        res.status(503).json({
+          success: false,
+          error: 'Database connection timeout - please try again',
+        } as ApiResponse<null>);
+        return;
+      }
+      
       res.status(500).json({
         success: false,
-        error: error.message,
+        error: error.message || 'Failed to fetch shows',
       } as ApiResponse<null>);
     }
   }

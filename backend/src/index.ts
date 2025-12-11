@@ -118,9 +118,24 @@ app.use((req: Request, res: Response) => {
 });
 
 // Start server
-app.listen(port, () => {
-  console.log(`✓ Server running on http://localhost:${port}`);
+const server = app.listen(port, () => {
+  console.log(`\n✓ Server running on http://localhost:${port}`);
   console.log(`✓ API docs available at http://localhost:${port}/api-docs`);
+  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+  if (process.env.DATABASE_URL) {
+    const dbHost = process.env.DATABASE_URL.split('@')[1]?.split(':')[0] || 'unknown';
+    console.log(`✓ Database: ${dbHost}\n`);
+  } else {
+    console.log(`❌ DATABASE_URL not configured\n`);
+  }
+});
+
+server.on('error', (err: any) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${port} is already in use`);
+  } else {
+    console.error('Server error:', err);
+  }
 });
 
 // Graceful shutdown
