@@ -39,15 +39,16 @@ export const SeatSelectionPage: React.FC = () => {
     fetchShowDetails();
   }, [showId, user]);
 
-  // Auto-refresh seat availability every 2 seconds for real-time updates
+  // Disabled auto-refresh to avoid database timeouts
+  // Refresh happens only on initial load and manual refresh
+  // Users can refresh manually by clicking a button if needed
   useEffect(() => {
-    if (!showId) return;
+    // Polling disabled - comment out to enable
+    // const refreshInterval = setInterval(() => {
+    //   fetchShowDetails();
+    // }, 60000); // 60 seconds if re-enabled
 
-    const refreshInterval = setInterval(() => {
-      fetchShowDetails();
-    }, 2000); // 2 seconds for real-time seat availability
-
-    return () => clearInterval(refreshInterval);
+    // return () => clearInterval(refreshInterval);
   }, [showId]);
 
   const fetchShowDetails = async () => {

@@ -29,21 +29,22 @@ export const HomePage: React.FC = () => {
   const [filteredShows, setFilteredShows] = useState<Show[]>([]);
   const [filter, setFilter] = useState('');
   const [showTimes, setShowTimes] = useState<Record<number, Date[]>>({});
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   // Initial fetch
   useEffect(() => {
     fetchShows();
   }, []);
 
-  // Auto-refresh every 10 seconds for real-time availability updates
+  // Disabled auto-refresh to avoid database timeouts
+  // Refresh happens only on initial load
   useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      fetchShows();
-      setLastRefresh(new Date());
-    }, 10000); // 10 seconds
+    // Polling disabled - comment out to enable
+    // const refreshInterval = setInterval(() => {
+    //   fetchShows();
+    //   setLastRefresh(new Date());
+    // }, 60000); // 60 seconds if re-enabled
 
-    return () => clearInterval(refreshInterval);
+    // return () => clearInterval(refreshInterval);
   }, [fetchShows]);
 
   useEffect(() => {
@@ -73,7 +74,6 @@ export const HomePage: React.FC = () => {
       <div style={styles.header}>
         <h1>🎬 Available Shows</h1>
         <p style={styles.subtitle}>Browse and book your favorite tickets</p>
-        <p style={styles.refreshIndicator}>🔄 Live updates • Last refresh: {lastRefresh.toLocaleTimeString()}</p>
       </div>
 
       <div style={styles.searchBox}>

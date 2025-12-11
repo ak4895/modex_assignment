@@ -37,15 +37,15 @@ export const MyBookingsPage: React.FC = () => {
     }
   }, [user]);
 
-  // Auto-refresh bookings every 3 seconds for real-time status updates
+  // Disabled auto-refresh to avoid database timeouts
+  // Refresh happens only on initial load and manual actions
   useEffect(() => {
-    if (!user) return;
+    // Polling disabled - comment out to enable
+    // const refreshInterval = setInterval(() => {
+    //   fetchUserBookings();
+    // }, 60000); // 60 seconds if re-enabled
 
-    const refreshInterval = setInterval(() => {
-      fetchUserBookings();
-    }, 3000); // 3 seconds for real-time cancellations and status changes
-
-    return () => clearInterval(refreshInterval);
+    // return () => clearInterval(refreshInterval);
   }, [user]);
 
   const fetchUserBookings = async () => {

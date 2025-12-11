@@ -33,9 +33,9 @@ const createPoolForUrl = (url: string, label: string): Pool => {
     max: isInternal ? 20 : 10,
     min: isInternal ? 5 : 2,
     idleTimeoutMillis: isInternal ? 30000 : 60000,
-    connectionTimeoutMillis: isInternal ? 10000 : 30000,
-    statement_timeout: 30000,
-    query_timeout: 30000,
+    connectionTimeoutMillis: isInternal ? 15000 : 45000,
+    statement_timeout: 45000,
+    query_timeout: 45000,
   };
 
   return new Pool(poolConfig);
