@@ -57,7 +57,7 @@ export const SeatSelectionPage: React.FC = () => {
       
       // Fetch show details
       const showResponse = await apiService.getShowById(parseInt(showId!));
-      if (!showResponse.success) {
+      if (!showResponse.success || !showResponse.data) {
         throw new Error(showResponse.error || 'Failed to fetch show details');
       }
       setShow(showResponse.data);
@@ -87,13 +87,13 @@ export const SeatSelectionPage: React.FC = () => {
       // Initialize seats grid
       const seatArray: Seat[] = [];
       const seatsPerRow = 10;
-      const totalRows = Math.ceil(showResponse.data.total_seats / seatsPerRow);
+      const totalRows = Math.ceil(showResponse.data!.total_seats / seatsPerRow);
       
       for (let row = 0; row < totalRows; row++) {
         const rowLetter = String.fromCharCode(65 + row); // A, B, C, etc.
         for (let col = 1; col <= seatsPerRow; col++) {
           const seatNum = row * seatsPerRow + col;
-          if (seatNum <= showResponse.data.total_seats) {
+          if (seatNum <= showResponse.data!.total_seats) {
             seatArray.push({
               seatNumber: seatNum,
               rowLetter,

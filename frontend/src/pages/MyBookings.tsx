@@ -50,20 +50,20 @@ export const MyBookingsPage: React.FC = () => {
 
   const fetchUserBookings = async () => {
     try {
-      const response = await apiService.get(`/users/${user?.id}/bookings`);
+      const response = await apiService.getUserBookings(user?.id || 0);
       const bookingsData = response.data || [];
       
       // Fetch show details for each booking
       const bookingsWithDetails = await Promise.all(
         bookingsData.map(async (booking: Booking) => {
           try {
-            const showResponse = await apiService.get(`/shows/${booking.show_id}`);
-            const detailedResponse = await apiService.get(`/bookings/${booking.id}`);
+            const showResponse = await apiService.getShowById(booking.show_id);
+            const detailedResponse = await apiService.getBooking(booking.id);
             return {
               ...booking,
-              show_name: showResponse.data.name,
-              show_time: showResponse.data.start_time,
-              seats: detailedResponse.data.seats || [],
+              show_name: showResponse.data?.name || 'Unknown Show',
+              show_time: showResponse.data?.start_time || '',
+              seats: detailedResponse.data?.seats || [],
               qr_code: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BOOKING_${booking.id}_SHOW_${booking.show_id}`,
             };
           } catch (err) {

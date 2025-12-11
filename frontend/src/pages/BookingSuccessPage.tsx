@@ -35,14 +35,19 @@ export const BookingSuccessPage: React.FC = () => {
 
   const fetchBookingDetails = async () => {
     try {
-      const response = await apiService.get(`/bookings/${bookingId}`);
+      const response = await apiService.getBooking(parseInt(bookingId || '0'));
       const bookingData = response.data;
+      if (!bookingData) {
+        throw new Error('Booking not found');
+      }
       setBooking(bookingData);
       
       // Fetch show info
       if (bookingData.show_id) {
-        const showResponse = await apiService.get(`/shows/${bookingData.show_id}`);
-        setShowInfo(showResponse.data);
+        const showResponse = await apiService.getShowById(bookingData.show_id);
+        if (showResponse.data) {
+          setShowInfo(showResponse.data);
+        }
       }
 
       // Generate dummy QR code
